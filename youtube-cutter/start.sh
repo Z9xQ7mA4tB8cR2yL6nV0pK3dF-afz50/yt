@@ -8,29 +8,39 @@ echo "=========================================="
 cd "$(dirname "$0")"
 
 # Install system deps
-echo "[1/4] Installing system dependencies..."
+echo "[1/5] Installing system dependencies..."
 sudo apt-get update -qq
-sudo apt-get install -y -qq ffmpeg python3-pip python3-venv > /dev/null 2>&1
+sudo apt-get install -y -qq ffmpeg python3-pip python3-venv curl > /dev/null 2>&1
 
 # Create venv
-echo "[2/4] Setting up Python environment..."
+echo "[2/5] Setting up Python environment..."
 python3 -m venv venv
 source venv/bin/activate
 
 # Install Python deps
-echo "[3/4] Installing Python packages..."
+echo "[3/5] Installing Python packages..."
 pip install -q -r requirements.txt
 
+# Force upgrade yt-dlp to absolute latest nightly (fixes YouTube blocks)
+echo "[3.5/5] Upgrading yt-dlp to latest nightly..."
+pip install -q --force-reinstall https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz
+
+# Verify yt-dlp works
+echo "yt-dlp version: $(python3 -m yt_dlp --version)"
+
+# Quick test
+echo "Quick test fetching video info..."
+python3 -m yt_dlp --dump-json --no-download "https://www.youtube.com/watch?v=jNQXAC9IVRw" 2>&1 | head -1 | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'Test OK: {d[\"title\"]}')" || echo "Warning: test fetch failed, but continuing..."
+
 # Download & setup cloudflared
-echo "[4/4] Setting up Cloudflare Tunnel..."
+echo "[4/5] Setting up Cloudflare Tunnel..."
 if [ ! -f ./cloudflared ]; then
     wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O cloudflared
     chmod +x cloudflared
 fi
 
 # Start Flask app in background
-echo ""
-echo "Starting web application on port 8080..."
+echo "[5/5] Starting web application on port 8080..."
 python3 app.py &
 APP_PID=$!
 sleep 3
