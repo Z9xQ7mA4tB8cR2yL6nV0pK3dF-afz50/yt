@@ -10,7 +10,7 @@ cd "$(dirname "$0")"
 # Install system deps
 echo "[1/5] Installing system dependencies..."
 sudo apt-get update -qq
-sudo apt-get install -y -qq ffmpeg python3-pip python3-venv curl > /dev/null 2>&1
+sudo apt-get install -y -qq ffmpeg python3-pip python3-venv curl nodejs > /dev/null 2>&1
 
 # Create venv
 echo "[2/5] Setting up Python environment..."
@@ -24,6 +24,7 @@ pip install -q -r requirements.txt
 # Force upgrade yt-dlp to absolute latest nightly (fixes YouTube blocks)
 echo "[3.5/5] Upgrading yt-dlp to latest nightly..."
 pip install -q --force-reinstall https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz
+pip install -q quickjs
 
 # Verify yt-dlp works
 echo "yt-dlp version: $(python3 -m yt_dlp --version)"
