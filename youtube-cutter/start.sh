@@ -39,8 +39,9 @@ pip install bgutil-ytdlp-pot-provider 2>&1 | tail -5
 echo "Setting up bgutil PO Token server scripts..."
 git clone https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git ~/bgutil-ytdlp-pot-provider
 cd ~/bgutil-ytdlp-pot-provider/server
-npm install 2>&1 | tail -3
-npm run build 2>&1 | tail -3
+npm install 2>&1 | tail -5
+npx tsc 2>&1 | tail -5
+ls -la build/ 2>&1 | head -5
 cd -
 
 echo "--- END ENV DEBUG ---"
