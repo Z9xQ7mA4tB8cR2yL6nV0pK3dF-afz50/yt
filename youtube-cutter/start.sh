@@ -29,6 +29,15 @@ pip install -q quickjs
 # Verify yt-dlp works
 echo "yt-dlp version: $(python3 -m yt_dlp --version)"
 
+
+echo "--- ENV DEBUG ---"
+which node && node --version || echo "node NOT in PATH"
+echo "PATH=$PATH"
+python3 -c "import quickjs; print('quickjs: OK')" 2>&1 || echo "quickjs: FAILED"
+pip install bgutil-ytdlp-pot-provider 2>&1 | tail -5
+echo "--- END ENV DEBUG ---"
+
+
 # Quick test
 echo "Quick test fetching video info..."
 
