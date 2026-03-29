@@ -31,6 +31,7 @@ def run_ytdlp(args, timeout=60):
     cmd = YTDLP_CMD + [
         "--no-check-certificates",
         "--no-cache-dir",
+        "--cookies", os.path.join(os.path.dirname(os.path.abspath(__file__)), "cookies.txt"),
         "--extractor-args", "youtube:player_client=ios,web",
         "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
     ] + args
