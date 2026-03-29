@@ -30,7 +30,10 @@ echo "yt-dlp version: $(python3 -m yt_dlp --version)"
 
 # Quick test
 echo "Quick test fetching video info..."
-python3 -m yt_dlp --dump-json --no-download "https://www.youtube.com/watch?v=jNQXAC9IVRw" 2>&1 | head -1 | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'Test OK: {d[\"title\"]}')" || echo "Warning: test fetch failed, but continuing..."
+
+echo "--- yt-dlp debug test ---"
+python3 -m yt_dlp --verbose --dump-json --no-download --extractor-args "youtube:player_client=ios,web" "https://www.youtube.com/watch?v=jNQXAC9IVRw" 2>&1 | tail -30
+echo "--- end debug test ---"
 
 # Download & setup cloudflared
 echo "[4/5] Setting up Cloudflare Tunnel..."
