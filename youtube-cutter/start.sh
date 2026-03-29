@@ -35,6 +35,14 @@ which node && node --version || echo "node NOT in PATH"
 echo "PATH=$PATH"
 python3 -c "import quickjs; print('quickjs: OK')" 2>&1 || echo "quickjs: FAILED"
 pip install bgutil-ytdlp-pot-provider 2>&1 | tail -5
+
+echo "Setting up bgutil PO Token server scripts..."
+git clone https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git ~/bgutil-ytdlp-pot-provider
+cd ~/bgutil-ytdlp-pot-provider/server
+npm install 2>&1 | tail -3
+npm run build 2>&1 | tail -3
+cd -
+
 echo "--- END ENV DEBUG ---"
 
 
