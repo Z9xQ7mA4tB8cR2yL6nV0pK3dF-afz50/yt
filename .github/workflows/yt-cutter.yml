@@ -1,0 +1,41 @@
+name: YT Cutter Pro - PoC
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-cutter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run YT Cutter Pro
+        run: |
+          chmod +x youtube-cutter/start.sh
+          cd youtube-cutter
+          bash start.sh &
+          
+          # Wait for tunnel URL to appear
+          echo "Waiting for webapp to be ready..."
+          for i in $(seq 1 60); do
+            if [ -f /tmp/cloudflared.log ]; then
+              URL=$(grep -oP 'https://[\w-]+\.trycloudflare\.com' /tmp/cloudflared.log | head -1)
+              if [ -n "$URL" ]; then
+                echo ""
+                echo "============================================"
+                echo "  ✅ WEBAPP IS READY!"
+                echo "  🌐 URL: $URL"
+                echo "============================================"
+                echo ""
+                break
+              fi
+            fi
+            sleep 3
+          done
+          
+          # Keep the job alive (5.5 hours max)
+          echo "Keeping alive... Press cancel on GitHub to stop."
+          sleep 19800
