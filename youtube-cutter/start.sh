@@ -46,6 +46,8 @@ cd -
 
 echo "--- END ENV DEBUG ---"
 
+export PATH="/usr/local/bin:$PATH"
+python3 -m yt_dlp --verbose --list-formats --cookies cookies.txt --extractor-args "youtube:player_client=web" "https://www.youtube.com/watch?v=jNQXAC9IVRw" 2>&1 | tail -50
 
 # Quick test
 echo "Quick test fetching video info..."
