@@ -38,9 +38,6 @@ python3 -m yt_dlp --verbose --list-formats --cookies cookies.txt --extractor-arg
 # Quick test
 echo "Quick test fetching video info..."
 
-echo "--- yt-dlp debug test ---"
-python3 -m yt_dlp --verbose --dump-json --no-download --extractor-args "youtube:player_client=web" "https://www.youtube.com/watch?v=jNQXAC9IVRw" 2>&1 | tail -30
-echo "--- end debug test ---"
 
 # Download & setup cloudflared
 echo "[4/5] Setting up Cloudflare Tunnel..."
