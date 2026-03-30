@@ -30,21 +30,7 @@ pip install -q quickjs
 echo "yt-dlp version: $(python3 -m yt_dlp --version)"
 
 
-echo "--- ENV DEBUG ---"
-which node && node --version || echo "node NOT in PATH"
-echo "PATH=$PATH"
-python3 -c "import quickjs; print('quickjs: OK')" 2>&1 || echo "quickjs: FAILED"
-pip install bgutil-ytdlp-pot-provider 2>&1 | tail -5
 
-echo "Setting up bgutil PO Token server scripts..."
-git clone https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git ~/bgutil-ytdlp-pot-provider
-cd ~/bgutil-ytdlp-pot-provider/server
-npm install 2>&1 | tail -5
-npx tsc 2>&1 | tail -5
-ls -la build/ 2>&1 | head -5
-cd -
-
-echo "--- END ENV DEBUG ---"
 
 export PATH="/usr/local/bin:$PATH"
 python3 -m yt_dlp --verbose --list-formats --cookies cookies.txt --extractor-args "youtube:player_client=web" "https://www.youtube.com/watch?v=jNQXAC9IVRw" 2>&1 | tail -50
