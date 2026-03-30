@@ -56,7 +56,6 @@ def video_info():
 
         if result.returncode != 0:
             error_msg = result.stderr.strip().split('\n')[-1] if result.stderr else "Unknown error"
-            print(f"[ERROR] yt-dlp failed: {error_msg}", flush=True)
             return jsonify({"error": f"yt-dlp error: {error_msg}"}), 400
 
         info = json.loads(result.stdout)
@@ -70,15 +69,8 @@ def video_info():
             "embed_url": f"https://www.youtube.com/embed/{video_id}"
         })
 
-    except subprocess.TimeoutExpired:
-        return jsonify({"error": "Request timed out. Try again."}), 500
-    except json.JSONDecodeError as e:
-        print(f"[ERROR] JSON parse error: {e}", flush=True)
-        return jsonify({"error": "Failed to parse video info"}), 500
     except Exception as e:
-        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/api/cut-download", methods=["POST"])
 def cut_download():
@@ -111,28 +103,19 @@ def cut_download():
     duration_ts = f"{(duration // 3600):02d}:{((duration % 3600) // 60):02d}:{(duration % 60):02d}"
 
     try:
-        # Step 1: yt-dlp দিয়ে direct stream URL বের করা
-        # video+audio আলাদা আলাদা URL আসতে পারে, তাই best single stream নেওয়া ভালো
+        # yt-dlp দিয়ে direct stream URL বের করা
         result = run_ytdlp([
-            "-f", "best[ext=mp4]/best",
+            "-f", "best[ext=mp4]",
             "-g", url
         ], timeout=45)
-
-        if result.returncode != 0:
-            # fallback: যেকোনো format
-            result = run_ytdlp(["-f", "best", "-g", url], timeout=45)
 
         if result.returncode != 0:
             error_msg = result.stderr.strip().split('\n')[-1] if result.stderr else "Unknown"
             return jsonify({"error": f"Could not get stream URL: {error_msg}"}), 500
 
-        stream_urls = result.stdout.strip().split("\n")
-        stream_url = stream_urls[0]
+        stream_url = result.stdout.strip().split("\n")[0]
 
-        print(f"[INFO] Stream URL obtained, starting ffmpeg cut...", flush=True)
-        print(f"[INFO] Start: {start_ts}, Duration: {duration_ts}", flush=True)
-
-        # Step 2: ffmpeg দিয়ে cut — প্রথমে stream copy try
+        # ffmpeg দিয়ে cut করা
         ffmpeg_cmd = [
             "ffmpeg", "-y",
             "-ss", start_ts,
@@ -140,31 +123,12 @@ def cut_download():
             "-t", duration_ts,
             "-c", "copy",
             "-avoid_negative_ts", "make_zero",
-            "-movflags", "+faststart",
             output_path
         ]
-
-        # যদি 2টা URL আসে (video + audio), তাহলে দুইটাই input দিতে হবে
-        if len(stream_urls) >= 2:
-            audio_url = stream_urls[1]
-            ffmpeg_cmd = [
-                "ffmpeg", "-y",
-                "-ss", start_ts,
-                "-i", stream_url,
-                "-ss", start_ts,
-                "-i", audio_url,
-                "-t", duration_ts,
-                "-map", "0:v:0", "-map", "1:a:0",
-                "-c", "copy",
-                "-avoid_negative_ts", "make_zero",
-                "-movflags", "+faststart",
-                output_path
-            ]
 
         proc = subprocess.run(ffmpeg_cmd, capture_output=True, text=True, timeout=600)
 
         if proc.returncode != 0 or not os.path.exists(output_path) or os.path.getsize(output_path) < 1000:
-            print(f"[WARN] Stream copy failed, trying re-encode...", flush=True)
             if os.path.exists(output_path):
                 os.remove(output_path)
 
@@ -173,30 +137,19 @@ def cut_download():
                 "ffmpeg", "-y",
                 "-ss", start_ts,
                 "-i", stream_url,
-            ]
-            if len(stream_urls) >= 2:
-                ffmpeg_cmd2 += ["-ss", start_ts, "-i", stream_urls[1]]
-                ffmpeg_cmd2 += ["-map", "0:v:0", "-map", "1:a:0"]
-
-            ffmpeg_cmd2 += [
                 "-t", duration_ts,
                 "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23",
                 "-c:a", "aac", "-b:a", "128k",
-                "-movflags", "+faststart",
                 output_path
             ]
 
             proc2 = subprocess.run(ffmpeg_cmd2, capture_output=True, text=True, timeout=600)
             if proc2.returncode != 0:
                 stderr_last = proc2.stderr.strip().split('\n')[-1] if proc2.stderr else "Unknown"
-                print(f"[ERROR] FFmpeg re-encode also failed: {stderr_last}", flush=True)
                 return jsonify({"error": f"FFmpeg failed: {stderr_last}"}), 500
 
         if not os.path.exists(output_path) or os.path.getsize(output_path) < 500:
             return jsonify({"error": "Output file is empty or not created"}), 500
-
-        file_size = os.path.getsize(output_path)
-        print(f"[OK] Cut complete! File size: {file_size / 1024:.1f} KB", flush=True)
 
         # Get title for filename
         title_result = run_ytdlp(["--get-title", url], timeout=15)
@@ -209,13 +162,10 @@ def cut_download():
             "success": True,
             "file_id": uid,
             "filename": f"{safe_title}_{start_ts.replace(':', '')}-{duration_ts.replace(':', '')}.mp4",
-            "file_size": file_size
+            "file_size": os.path.getsize(output_path)
         })
 
-    except subprocess.TimeoutExpired:
-        return jsonify({"error": "Processing timed out (video might be too long)"}), 500
     except Exception as e:
-        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 
