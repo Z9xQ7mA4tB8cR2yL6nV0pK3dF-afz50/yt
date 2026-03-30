@@ -27,29 +27,16 @@ def time_to_seconds(h, m, s):
 
 
 def run_ytdlp(args, timeout=60):
-    """yt-dlp কে python -m yt_dlp দিয়ে run করে — proper user agent ও extra args সহ"""
+    # cookies.txt ফাইলটি এখন আর লাগবে না
     cmd = YTDLP_CMD + [
         "--no-check-certificates",
         "--no-cache-dir",
-        "--cookies", os.path.join(os.path.dirname(os.path.abspath(__file__)), "cookies.txt"),
-        "--extractor-args", "youtube:player_client=web",
-        "-f", "best",
-        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+        # PO Token এর জন্য সরাসরি args
+        "--extractor-args", "youtube:player_client=web,android",
     ] + args
-
-    print(f"[yt-dlp] Running: {' '.join(cmd)}", flush=True)
-
-    result = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        timeout=timeout
-    )
-
-    if result.stderr:
-        print(f"[yt-dlp stderr]: {result.stderr[:1000]}", flush=True)
-
-    return result
+    
+    return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
 
 
 @app.route("/")
