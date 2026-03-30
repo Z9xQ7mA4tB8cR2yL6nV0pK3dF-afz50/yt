@@ -53,7 +53,7 @@ python3 -m yt_dlp --verbose --list-formats --cookies cookies.txt --extractor-arg
 echo "Quick test fetching video info..."
 
 echo "--- yt-dlp debug test ---"
-python3 -m yt_dlp --verbose --dump-json --no-download "--extractor-args", "youtube:player_client=web;po_token_provider=bgutil:script-node", "https://www.youtube.com/watch?v=jNQXAC9IVRw" 2>&1 | tail -30
+python3 -m yt_dlp --verbose --dump-json --no-download --extractor-args "youtube:player_client=web" "https://www.youtube.com/watch?v=jNQXAC9IVRw" 2>&1 | tail -30
 echo "--- end debug test ---"
 
 # Download & setup cloudflared
